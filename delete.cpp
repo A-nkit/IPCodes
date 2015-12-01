@@ -1,10 +1,4 @@
-#include <opencv/cv.h>
-#include <opencv/highgui.h>
-#include <iostream>
-#include "opencv2/imgproc/imgproc.hpp"
-#include "opencv2/highgui/highgui.hpp"
-using namespace cv;
-using namespace std;
+#include "headers.h"
 
 int main(){
 	Vec3b pixCol;
@@ -21,7 +15,9 @@ int main(){
 	cam.open(CV_CAP_ANY);
 	cam.set(CV_CAP_PROP_FRAME_WIDTH,640);
  	cam.set(CV_CAP_PROP_FRAME_HEIGHT,480);
-	Mat img1,img2,delImg,hsv,threshed,img3;
+	Mat img1,img2,delImg,hsv,threshed,img3,delImg2;
+	int h1,s1,v1,h2,s2,v2;
+	trackbars(&h1,&h2,&s1,&s2,&v1,&v2);
 	while(1){
 		char ch = waitKey(1);
 		if(ch == 'q')
@@ -34,15 +30,15 @@ int main(){
 		cam >> img2;
 		delImg = abs(img2 - img1);
 
-		// imshow("del",delImg);
-
 		cvtColor(img1,hsv,COLOR_BGR2HSV);
-		medianBlur(delImg,delImg,21);
-		inRange(delImg,Scalar(0,15,15),Scalar(255,255,255),delImg);
+		//medianBlur(delImg,delImg,21);
+		inRange(delImg,Scalar(h1,s1,v1),Scalar(h2,s2,v2),delImg);
+		imshow("del",delImg);
+		delImg.copyTo(delImg2);
 		findContours(delImg,contours,hierarchy,CV_RETR_CCOMP,CV_CHAIN_APPROX_SIMPLE);
 		int j, maxindex1, maxindex2, maxarea1=0, maxarea2=0, area;
 		if(first){
-			imshow("del",delImg);
+			imshow("del2",delImg2);
 			if(contours.size() > 1){
 	            for(int j=0; j< contours.size(); j++)
 	            {
@@ -91,7 +87,7 @@ int main(){
 			remem = false;
 			track = true;
 		}
-		if(0){
+		if(track){
 			h/=5;
 		    s/=5;
 		    v/=5;
@@ -106,11 +102,12 @@ int main(){
 
 	        inRange(hsv, Scalar(h_min,s_min,v_min), Scalar(h_max, s_max, v_max), threshed);
 	        medianBlur(threshed,threshed,9);
+	        imshow("thr",threshed);
 
 	        findContours(threshed,contours1,hierarchy,CV_RETR_CCOMP,CV_CHAIN_APPROX_SIMPLE );
-	        if(contours.size() > 1){
+	        if(contours1.size() > 1){
 	            int j, maxindex, maxarea=0, area;
-	            for(j=0; j< contours.size(); j++)
+	            for(j=0; j< contours1.size(); j++)
 	            {
 	                moment = moments((Mat)contours1.at(j));
 	                area= moment.m00;
