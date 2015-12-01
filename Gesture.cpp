@@ -66,28 +66,41 @@ medianBlur(threshold_output, threshold_output, 15);
   
    /// Find contours
    findContours( threshold_output, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0) );
-
+int j, maxindex, maxarea=0, area;
+Moments moment;
+if(contours.size() > 1){
+              
+              for(j=0; j< contours.size(); j++)
+              {
+                  moment = moments((Mat)contours.at(j));
+                  area= moment.m00;
+                  if(area>maxarea)
+                  {
+                      maxarea = area;
+                      maxindex = j;
+                  }
+              }
+          }
    /// Find the convex hull object for each contour
-   vector<vector<Point> >hull( contours.size() );
-   vector<vector<Point> >hull1( contours.size() );
-   for( int i = 0; i < contours.size(); i++ )
-      { approxPolyDP(contours[i],hull[i] , 21, false); 
-        convexHull( hull[i], hull1[i], false ); 
+   vector<vector<Point> >hull(1);
+   vector<vector<Point> >hull1(1);
+   
+      approxPolyDP(contours[maxindex],hull[0], 21, false); 
+        convexHull( hull[0], hull1[0], false );        
+      
         
-      }
 
    /// Draw contours + hull results
    Mat drawing = Mat::zeros( threshold_output.size(), CV_8UC3 );
-   for( int i = 0; i< contours.size(); i++ )
-      {
+  
         Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
         // drawContours( drawing, contours, i, color, 1, 8, vector<Vec4i>(), 0, Point() );
         // drawContours( src, contours, i, color, 1, 8, vector<Vec4i>(), 0, Point() );
-        drawContours( src, hull, i, color, 1, 8, vector<Vec4i>(), 0, Point() );
-        drawContours( drawing, hull, i, color, 1, 8, vector<Vec4i>(), 0, Point() );
-        // drawContours( src, hull1, i, color, 1, 8, vector<Vec4i>(), 0, Point() );
-        // drawContours( drawing, hull1, i, color, 1, 8, vector<Vec4i>(), 0, Point() );
-      }
+        drawContours( src, hull, 0, color, 1, 8, vector<Vec4i>(), 0, Point() );
+        drawContours( drawing, hull, 0, color, 1, 8, vector<Vec4i>(), 0, Point() );
+        drawContours( src, hull1, 0, color, 1, 8, vector<Vec4i>(), 0, Point() );
+        drawContours( drawing, hull1, 0, color, 1, 8, vector<Vec4i>(), 0, Point() );
+      
 
    /// Show in a window
    namedWindow( "Hull demo", CV_WINDOW_AUTOSIZE );
