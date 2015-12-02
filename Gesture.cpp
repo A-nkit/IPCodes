@@ -32,11 +32,13 @@ int main(){
     if(ch == 'k'){ 
       cap.release();
       Mat drawing = Mat::zeros( threshold_output.size(), CV_8UC3 );
+      
+      erode(threshold_output, threshold_output, getStructuringElement(MORPH_ELLIPSE, Size(7, 7)) );
+      dilate( threshold_output, threshold_output, getStructuringElement(MORPH_ELLIPSE, Size(2, 2)) ); 
+      dilate( threshold_output, threshold_output, getStructuringElement(MORPH_ELLIPSE, Size(2, 2)) ); 
+      erode(threshold_output, threshold_output, getStructuringElement(MORPH_ELLIPSE, Size(7, 7)) );
       medianBlur(threshold_output, threshold_output, 15);
-      erode(threshold_output, threshold_output, getStructuringElement(MORPH_ELLIPSE, Size(7, 7)) );
-      dilate( threshold_output, threshold_output, getStructuringElement(MORPH_ELLIPSE, Size(2, 2)) ); 
-      dilate( threshold_output, threshold_output, getStructuringElement(MORPH_ELLIPSE, Size(2, 2)) ); 
-      erode(threshold_output, threshold_output, getStructuringElement(MORPH_ELLIPSE, Size(7, 7)) );
+      
       findContours( threshold_output, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0) );
       int j, maxindex, maxarea=0, area;
       Moments moment;
@@ -65,12 +67,18 @@ int main(){
 
           z = 3.1414 + q - w;
           cerr<<'\n'<<q<<'\t'<<w<<'\t'<<z;
-          circle(drawing, hull[0][k], 2*k+2, Scalar(0,255,0), 1, CV_8UC3, 0);
+          string s;
+          s[0]=(char)k;
+          s[1]='\0';
+          int j=0;
+          //putText(hull, s, hull[0][k], 1,1, Scalar(0,255,0));
           if( (z < 3.3) && (z > 3.0)){
             continue;
-          }
+          }//
           else
-           fhull[0].push_back(hull[0][k]);
+            fhull[0].push_back(hull[0][k]);
+            //putText(fhull, s, fhull[0][j], 1,1, Scalar(0,255,0));
+            j++;
         }  
       }
       
