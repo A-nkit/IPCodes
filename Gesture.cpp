@@ -28,68 +28,70 @@ int main(){
     cvtColor( src, src_gray, CV_BGR2HSV );
     inRange(src_gray, Scalar(h1,s1,v1), Scalar(h2,s2,v2), threshold_output); 
     imshow("hi", threshold_output);
-    Mat drawing = Mat::zeros( threshold_output.size(), CV_8UC3 );
-    medianBlur(threshold_output, threshold_output, 15);
-    erode(threshold_output, threshold_output, getStructuringElement(MORPH_ELLIPSE, Size(7, 7)) );
-    dilate( threshold_output, threshold_output, getStructuringElement(MORPH_ELLIPSE, Size(2, 2)) ); 
-    dilate( threshold_output, threshold_output, getStructuringElement(MORPH_ELLIPSE, Size(2, 2)) ); 
-    erode(threshold_output, threshold_output, getStructuringElement(MORPH_ELLIPSE, Size(7, 7)) );
-    findContours( threshold_output, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0) );
-    int j, maxindex, maxarea=0, area;
-    Moments moment;
-    if(contours.size() > 1){
-      for(j=0; j< contours.size(); j++){
-        moment = moments((Mat)contours.at(j));
-        area= moment.m00;
-        if(area>maxarea){
-          maxarea = area;
-          maxindex = j;
+    char ch=waitKey(5);
+    if(ch == 'k'){ 
+      Mat drawing = Mat::zeros( threshold_output.size(), CV_8UC3 );
+      medianBlur(threshold_output, threshold_output, 15);
+      erode(threshold_output, threshold_output, getStructuringElement(MORPH_ELLIPSE, Size(7, 7)) );
+      dilate( threshold_output, threshold_output, getStructuringElement(MORPH_ELLIPSE, Size(2, 2)) ); 
+      dilate( threshold_output, threshold_output, getStructuringElement(MORPH_ELLIPSE, Size(2, 2)) ); 
+      erode(threshold_output, threshold_output, getStructuringElement(MORPH_ELLIPSE, Size(7, 7)) );
+      findContours( threshold_output, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0) );
+      int j, maxindex, maxarea=0, area;
+      Moments moment;
+      if(contours.size() > 1){
+        for(j=0; j< contours.size(); j++){
+          moment = moments((Mat)contours.at(j));
+          area= moment.m00;
+          if(area>maxarea){
+            maxarea = area;
+            maxindex = j;
+          }
         }
       }
+      vector<vector<Point> >hull(1);
+      vector<vector<Point> >hull1(1);
+      vector<vector<Point> >fhull(1);
+      approxPolyDP(contours[maxindex],hull[0], 21, false); 
+      convexHull( hull[0], hull1[0], false );        
+      if(hull[0].size()){
+        fhull[0].push_back(hull[0][0]);
+        int k;
+        double q,w,z;
+        for(k=1; k< (hull1[0].size() - 1); k++){
+          q = atan((hull[0][k].y - hull[0][k-1].y)/(hull[0][k].x - hull[0][k-1].x));
+          w = atan((hull[0][k+1].y - hull[0][k].y)/(hull[0][k+1].x - hull[0][k].x));
+
+          z = 3.1414 + q - w;
+          cerr<<'\n'<<q<<'\t'<<w<<'\t'<<z;
+          circle(drawing, hull[0][k], 2*k+2, Scalar(0,255,0), 1, CV_8UC3, 0);
+          if( (z < 3.3) && (z > 3.0)){
+            continue;
+          }
+          else
+           fhull[0].push_back(hull[0][k]);
+        }  
+      }
+      
+      //Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
+      // drawContours( drawing, contours, i, color, 1, 8, vector<Vec4i>(), 0, Point() );
+      // drawContours( src, contours, i, color, 1, 8, vector<Vec4i>(), 0, Point() );
+      drawContours( src, fhull, 0, Scalar(255,0,0), 2, 8, vector<Vec4i>(), 0, Point() );
+      //drawContours( drawing, fhull, 0, Scalar(255,0,0), 2, 8, vector<Vec4i>(), 0, Point() );
+      //drawContours( src, hull1, 0, Scalar(0,0,255), 2, 8, vector<Vec4i>(), 0, Point() );
+      drawContours( drawing, hull, 0, Scalar(0,0,255), 2, 8, vector<Vec4i>(), 0, Point() );
+
+
+      /// Show in a window
+      imshow( "hull", drawing );
+      imshow( "fhull", src );
+
+      int c = waitKey(0);
+      if( (char)c == 27 )
+        break; 
+      else if((char)c == 114)
+        continue;
     }
-    vector<vector<Point> >hull(1);
-    vector<vector<Point> >hull1(1);
-    vector<vector<Point> >fhull(1);
-
-    approxPolyDP(contours[maxindex],hull[0], 21, false); 
-    convexHull( hull[0], hull1[0], false );        
-    if(hull1[0].size()){
-      fhull[0].push_back(hull1[0][0]);
-      int k;
-      double q,w,z;
-      for(k=1; k< (hull1[0].size() - 1); k++){
-        q = atan((hull1[0][k].y - hull1[0][k-1].y)/(hull1[0][k].x - hull1[0][k-1].x));
-        w = atan((hull1[0][k+1].y - hull1[0][k].y)/(hull1[0][k+1].x - hull1[0][k].x));
-
-        z = 3.1414 + q - w;
-        cerr<<'\n'<<q<<'\t'<<w<<'\t'<<z;
-        circle(drawing, hull1[0][k], 2*k+2, Scalar(0,255,0), 1, CV_8UC3, 0);
-        if( (z < 3.3) && (z > 3.0)){
-          continue;
-        }
-        else
-         fhull[0].push_back(hull1[0][k]);
-      }  
-    }
-    
-    //Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
-    // drawContours( drawing, contours, i, color, 1, 8, vector<Vec4i>(), 0, Point() );
-    // drawContours( src, contours, i, color, 1, 8, vector<Vec4i>(), 0, Point() );
-    drawContours( src, fhull, 0, Scalar(255,0,0), 2, 8, vector<Vec4i>(), 0, Point() );
-    //drawContours( drawing, fhull, 0, Scalar(255,0,0), 2, 8, vector<Vec4i>(), 0, Point() );
-    //drawContours( src, hull1, 0, Scalar(0,0,255), 2, 8, vector<Vec4i>(), 0, Point() );
-    drawContours( drawing, hull1, 0, Scalar(0,0,255), 2, 8, vector<Vec4i>(), 0, Point() );
-
-
-    /// Show in a window
-    imshow( "hull1", drawing );
-    imshow( "fhull", src );
-
-    int c = waitKey(0);
-    if( (char)c == 27 )
-      break; 
-    else if((char)c == 114)
-      continue;
   }
   return(0);
 }
