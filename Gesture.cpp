@@ -28,7 +28,7 @@ int main(){
     cvtColor( src, src_gray, CV_BGR2HSV );
     inRange(src_gray, Scalar(h1,s1,v1), Scalar(h2,s2,v2), threshold_output); 
     imshow("hi", threshold_output);
-    
+    Mat drawing = Mat::zeros( threshold_output.size(), CV_8UC3 );
     medianBlur(threshold_output, threshold_output, 15);
     erode(threshold_output, threshold_output, getStructuringElement(MORPH_ELLIPSE, Size(7, 7)) );
     dilate( threshold_output, threshold_output, getStructuringElement(MORPH_ELLIPSE, Size(2, 2)) ); 
@@ -60,32 +60,36 @@ int main(){
       for(k=1; k< (hull1[0].size() - 1); k++){
         q = atan((hull1[0][k].y - hull1[0][k-1].y)/(hull1[0][k].x - hull1[0][k-1].x));
         w = atan((hull1[0][k+1].y - hull1[0][k].y)/(hull1[0][k+1].x - hull1[0][k].x));
-        z = 3.1414 - q + w;
-        if( (z < 3.84) && (z > 2.44)){
-          fhull[0].push_back(hull1[0][k]);
+
+        z = 3.1414 + q - w;
+        cerr<<'\n'<<q<<'\t'<<w<<'\t'<<z;
+        circle(drawing, hull1[0][k], 2*k+2, Scalar(0,255,0), 1, CV_8UC3, 0);
+        if( (z < 3.3) && (z > 3.0)){
+          continue;
         }
-        else continue;
+        else
+         fhull[0].push_back(hull1[0][k]);
       }  
     }
-    Mat drawing = Mat::zeros( threshold_output.size(), CV_8UC3 );
-
-    Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
+    
+    //Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
     // drawContours( drawing, contours, i, color, 1, 8, vector<Vec4i>(), 0, Point() );
     // drawContours( src, contours, i, color, 1, 8, vector<Vec4i>(), 0, Point() );
-    drawContours( src, hull, 0, color, 1, 8, vector<Vec4i>(), 0, Point() );
-    drawContours( drawing, hull, 0, color, 1, 8, vector<Vec4i>(), 0, Point() );
-    drawContours( src, hull1, 0, color, 1, 8, vector<Vec4i>(), 0, Point() );
-    drawContours( drawing, hull1, 0, color, 1, 8, vector<Vec4i>(), 0, Point() );
+    drawContours( src, fhull, 0, Scalar(255,0,0), 2, 8, vector<Vec4i>(), 0, Point() );
+    //drawContours( drawing, fhull, 0, Scalar(255,0,0), 2, 8, vector<Vec4i>(), 0, Point() );
+    //drawContours( src, hull1, 0, Scalar(0,0,255), 2, 8, vector<Vec4i>(), 0, Point() );
+    drawContours( drawing, hull1, 0, Scalar(0,0,255), 2, 8, vector<Vec4i>(), 0, Point() );
 
 
     /// Show in a window
-    namedWindow( "Hull demo", CV_WINDOW_AUTOSIZE);
-    imshow( "Hull demo", drawing );
-    imshow( "source_window", src );
+    imshow( "hull1", drawing );
+    imshow( "fhull", src );
 
-    int c = waitKey(10);
+    int c = waitKey(0);
     if( (char)c == 27 )
       break; 
+    else if((char)c == 114)
+      continue;
   }
   return(0);
 }
