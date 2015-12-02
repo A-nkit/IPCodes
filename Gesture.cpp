@@ -30,6 +30,7 @@ int main(){
     imshow("hi", threshold_output);
     char ch=waitKey(5);
     if(ch == 'k'){ 
+      cap.release();
       Mat drawing = Mat::zeros( threshold_output.size(), CV_8UC3 );
       medianBlur(threshold_output, threshold_output, 15);
       erode(threshold_output, threshold_output, getStructuringElement(MORPH_ELLIPSE, Size(7, 7)) );
@@ -54,11 +55,11 @@ int main(){
       vector<vector<Point> >fhull(1);
       approxPolyDP(contours[maxindex],hull[0], 21, false); 
       convexHull( hull[0], hull1[0], false );        
-      if(hull[0].size()){
+      if(hull[0].size()){ 
         fhull[0].push_back(hull[0][0]);
         int k;
         double q,w,z;
-        for(k=1; k< (hull1[0].size() - 1); k++){
+        for(k=1; k< (hull[0].size() - 1); k++){
           q = atan((hull[0][k].y - hull[0][k-1].y)/(hull[0][k].x - hull[0][k-1].x));
           w = atan((hull[0][k+1].y - hull[0][k].y)/(hull[0][k+1].x - hull[0][k].x));
 
@@ -91,6 +92,7 @@ int main(){
         break; 
       else if((char)c == 114)
         continue;
+      cap.open(0);
     }
   }
   return(0);
